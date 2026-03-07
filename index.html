@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trent — Automatización con IA para empresas</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dark: '#0A111E',
+            accent: '#2563EB',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', system-ui, sans-serif; }
+    html { scroll-behavior: smooth; }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      filter: blur(4px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); filter: blur(0); }
+    .d1 { transition-delay: 0.1s; }
+    .d2 { transition-delay: 0.2s; }
+    .d3 { transition-delay: 0.3s; }
+    .d4 { transition-delay: 0.4s; }
+
+    #navbar { transition: background-color 0.3s ease, box-shadow 0.3s ease; }
+    #navbar.scrolled {
+      background-color: rgba(255,255,255,0.97);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 1px 0 #E5E7EB;
+    }
+    .nav-link { color: rgba(255,255,255,0.7); transition: color 0.3s; }
+    .nav-link:hover { color: white; }
+    #navbar.scrolled .nav-link { color: #6B7280; }
+    #navbar.scrolled .nav-link:hover { color: #0A111E; }
+    #nav-logo-wrap { color: white; transition: color 0.3s; text-decoration: none; }
+    #navbar.scrolled #nav-logo-wrap { color: #0A111E; }
+    .menu-icon { color: white; transition: color 0.3s; }
+    #navbar.scrolled .menu-icon { color: #0A111E; }
+    .nav-cta {
+      background: #2563EB; color: white;
+      transition: background-color 0.2s;
+    }
+    .nav-cta:hover { background: #1D4ED8; }
+
+    .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.08); border-color: #2563EB !important; }
+
+    input, textarea {
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #2563EB !important;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+    }
+
+    /* ── Scroll progress bar ─────────────────────────────── */
+    #scroll-progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: #2563EB;
+      width: 0%;
+      z-index: 200;
+      transition: width 0.08s linear;
+      pointer-events: none;
+    }
+
+    /* ── Nav link animated underline ─────────────────────── */
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0;
+      width: 0; height: 1px;
+      background: currentColor;
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-link:hover::after { width: 100%; }
+
+    /* ── Button shine sweep ──────────────────────────────── */
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%);
+      transform: translateX(-120%);
+      transition: transform 0.6s ease;
+    }
+    .btn-shine:hover::after { transform: translateX(120%); }
+
+    /* ── Hero glow breathing ─────────────────────────────── */
+    @keyframes glow-breathe {
+      0%, 100% { opacity: 0.05; }
+      50%       { opacity: 0.09; }
+    }
+    .hero-glow { animation: glow-breathe 7s ease-in-out infinite; }
+
+    /* ── Page entrance ───────────────────────────────────── */
+    @keyframes page-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    body { animation: page-in 0.35s ease forwards; }
+  </style>
+</head>
+<body class="bg-white text-[#0A111E] antialiased">
+  <div id="scroll-progress"></div>
+
+  <!-- ======================================================
+       NAVBAR
+  ====================================================== -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-transparent">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+
+      <!-- Logo: ícono SVG inline + texto HTML — currentColor para swap dark/light -->
+      <a href="#" id="nav-logo-wrap" class="flex items-center gap-2.5 flex-shrink-0">
+        <svg width="22" height="22" viewBox="0 0 40 40" fill="none"
+             xmlns="http://www.w3.org/2000/svg"
+             shape-rendering="geometricPrecision"
+             aria-hidden="true">
+          <circle cx="20" cy="20" r="18.5" stroke="currentColor" stroke-width="2.5"/>
+          <path d="M13 15h14M20 15v10" stroke="currentColor" stroke-width="2.8" stroke-linecap="square"/>
+        </svg>
+        <span style="font-size:15px; font-weight:500; letter-spacing:0.04em; line-height:1;">Trent Agency</span>
+      </a>
+
+      <!-- Desktop links -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#soluciones" class="nav-link text-sm font-medium">Soluciones</a>
+        <a href="#como-trabajamos" class="nav-link text-sm font-medium">Cómo trabajamos</a>
+        <a href="#resultados" class="nav-link text-sm font-medium">Resultados</a>
+        <a href="#contacto" class="nav-link text-sm font-medium">Contacto</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="#contacto" class="btn-shine nav-cta hidden md:inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold">
+          Hablemos
+        </a>
+        <button id="menu-btn" class="md:hidden p-2 rounded-lg" aria-label="Menú">
+          <i data-lucide="menu" class="menu-icon w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-[#0A111E] border-t border-white/10 px-6 py-5">
+      <div class="flex flex-col gap-5">
+        <a href="#soluciones" class="text-sm font-medium text-white/70 hover:text-white">Soluciones</a>
+        <a href="#como-trabajamos" class="text-sm font-medium text-white/70 hover:text-white">Cómo trabajamos</a>
+        <a href="#resultados" class="text-sm font-medium text-white/70 hover:text-white">Resultados</a>
+        <a href="#contacto" class="text-sm font-medium text-white/70 hover:text-white">Contacto</a>
+        <a href="#contacto" class="inline-flex items-center justify-center px-4 py-2.5 bg-[#2563EB] text-white text-sm font-semibold rounded-lg">
+          Hablemos
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ======================================================
+       HERO
+  ====================================================== -->
+  <section class="min-h-screen bg-[#0A111E] flex items-center justify-center relative overflow-hidden">
+    <!-- Dot grid -->
+    <div class="absolute inset-0 opacity-[0.025]"
+         style="background-image: radial-gradient(circle at 1.5px 1.5px, white 1.5px, transparent 0); background-size: 36px 36px;"></div>
+    <!-- Glow -->
+    <div class="hero-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2563EB] rounded-full blur-[140px] pointer-events-none"></div>
+
+    <div class="relative max-w-4xl mx-auto px-6 py-36 text-center">
+
+      <!-- Neural logo (trent-agency-neural inline — icon portion) -->
+      <div class="fade-up flex justify-center mb-10">
+        <svg width="56" height="56" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" fill="#0A111E"/>
+          <path d="M10 12h20M20 12v16" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="square"/>
+        </svg>
+      </div>
+
+      <h1 class="fade-up d1 text-4xl md:text-5xl lg:text-[3.5rem] font-bold text-white leading-[1.08] tracking-tight mb-7">
+        Tu empresa pierde tiempo y dinero<br class="hidden md:block"> en tareas que ya no deberían ser manuales
+      </h1>
+
+      <p class="fade-up d2 text-lg md:text-xl text-[#9CA3AF] leading-relaxed max-w-2xl mx-auto mb-10">
+        Diseñamos sistemas con inteligencia artificial que automatizan tu operación — atención, datos, cobros y procesos.
+        <span class="text-white font-medium"> Más tiempo. Menos costos.</span>
+      </p>
+
+      <div class="fade-up d3 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#contacto"
+           class="btn-shine w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-xl text-sm transition-colors">
+          Solicitá un diagnóstico gratuito
+        </a>
+        <a href="#soluciones"
+           class="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-white/70 hover:text-white text-sm font-medium transition-colors">
+          Ver soluciones
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       PROBLEMAS
+  ====================================================== -->
+  <section class="py-24 bg-white">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16 fade-up">
+        <h2 class="text-3xl md:text-4xl font-bold text-[#0A111E] tracking-tight">
+          Esto le pasa a la mayoría de las empresas
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="fade-up card-hover p-6 rounded-2xl border border-[#E5E7EB] bg-white">
+          <div class="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center mb-4">
+            <i data-lucide="clock" class="w-5 h-5 text-[#2563EB]"></i>
+          </div>
+          <h3 class="font-semibold text-[#0A111E] mb-2 leading-snug">Responder consultas consume horas del equipo</h3>
+          <p class="text-sm text-[#6B7280] leading-relaxed">Tu equipo dedica 2-3 horas diarias a responder lo mismo por WhatsApp, email y teléfono.</p>
+        </div>
+
+        <div class="fade-up d1 card-hover p-6 rounded-2xl border border-[#E5E7EB] bg-white">
+          <div class="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center mb-4">
+            <i data-lucide="folder-search" class="w-5 h-5 text-[#2563EB]"></i>
+          </div>
+          <h3 class="font-semibold text-[#0A111E] mb-2 leading-snug">La información está en 10 lugares distintos</h3>
+          <p class="text-sm text-[#6B7280] leading-relaxed">Planillas, WhatsApp, correos, cuadernos. Nadie tiene visibilidad real de qué pasa en el negocio.</p>
+        </div>
+
+        <div class="fade-up d2 card-hover p-6 rounded-2xl border border-[#E5E7EB] bg-white">
+          <div class="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center mb-4">
+            <i data-lucide="repeat" class="w-5 h-5 text-[#2563EB]"></i>
+          </div>
+          <h3 class="font-semibold text-[#0A111E] mb-2 leading-snug">Tareas manuales que nadie quiere hacer</h3>
+          <p class="text-sm text-[#6B7280] leading-relaxed">Cargar facturas, enviar recordatorios, copiar datos de un sistema a otro. Siempre lo mismo, siempre con errores.</p>
+        </div>
+
+        <div class="fade-up d3 card-hover p-6 rounded-2xl border border-[#E5E7EB] bg-white">
+          <div class="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center mb-4">
+            <i data-lucide="user-x" class="w-5 h-5 text-[#2563EB]"></i>
+          </div>
+          <h3 class="font-semibold text-[#0A111E] mb-2 leading-snug">Perdés clientes por tardar en responder</h3>
+          <p class="text-sm text-[#6B7280] leading-relaxed">Un cliente que espera más de 30 minutos ya le escribió a tu competencia.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       SOLUCIONES
+  ====================================================== -->
+  <section id="soluciones" class="py-24 bg-[#F8F9FB]">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16 fade-up">
+        <h2 class="text-3xl md:text-4xl font-bold text-[#0A111E] tracking-tight mb-4">Qué hacemos</h2>
+        <p class="text-lg text-[#6B7280] max-w-lg mx-auto">Soluciones concretas que se integran con tus herramientas actuales</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <div class="fade-up card-hover p-8 rounded-2xl border border-[#E5E7EB] bg-white">
+          <div class="w-11 h-11 bg-[#EFF6FF] rounded-xl flex items-center justify-center mb-5">
+            <i data-lucide="message-square" class="w-5 h-5 text-[#2563EB]"></i>
+          </div>
+          <h3 class="text-lg font-bold text-[#0A111E] mb-3">Atención al cliente inteligente</h3>
+          <p class="text-[#6B7280] leading-relaxed mb-5 text-sm">Agentes que responden consultas, califican leads y agendan reuniones en WhatsApp, web o email. 24/7, sin intervención humana.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Disponible 24/7</span>
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Responde en segundos</span>
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Escala sin contratar</span>
+          </div>
+        </div>
+
+        <div class="fade-up d1 card-hover p-8 rounded-2xl border border-[#E5E7EB] bg-white">
+          <div class="w-11 h-11 bg-[#EFF6FF] rounded-xl flex items-center justify-center mb-5">
+            <i data-lucide="file-text" class="w-5 h-5 text-[#2563EB]"></i>
+          </div>
+          <h3 class="text-lg font-bold text-[#0A111E] mb-3">Automatización de procesos</h3>
+          <p class="text-[#6B7280] leading-relaxed mb-5 text-sm">Procesamiento de facturas, contratos y formularios. La IA extrae datos, los valida y actualiza tus sistemas automáticamente.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Sin carga manual</span>
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Menos errores</span>
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Ahorra +10hs/semana</span>
+          </div>
+        </div>
+
+        <div class="fade-up d2 card-hover p-8 rounded-2xl border border-[#E5E7EB] bg-white">
+          <div class="w-11 h-11 bg-[#EFF6FF] rounded-xl flex items-center justify-center mb-5">
+            <i data-lucide="link" class="w-5 h-5 text-[#2563EB]"></i>
+          </div>
+          <h3 class="text-lg font-bold text-[#0A111E] mb-3">Integración de sistemas</h3>
+          <p class="text-[#6B7280] leading-relaxed mb-5 text-sm">Conectamos tus herramientas (CRM, contabilidad, planillas) para que los datos fluyan sin intervención manual.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Un solo sistema</span>
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Datos sincronizados</span>
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Reportes en tiempo real</span>
+          </div>
+        </div>
+
+        <div class="fade-up d3 card-hover p-8 rounded-2xl border border-[#E5E7EB] bg-white">
+          <div class="w-11 h-11 bg-[#EFF6FF] rounded-xl flex items-center justify-center mb-5">
+            <i data-lucide="target" class="w-5 h-5 text-[#2563EB]"></i>
+          </div>
+          <h3 class="text-lg font-bold text-[#0A111E] mb-3">Consultoría estratégica</h3>
+          <p class="text-[#6B7280] leading-relaxed mb-5 text-sm">Analizamos tus procesos y te mostramos dónde la IA genera más impacto. Te mostramos el ROI antes de que inviertas un peso.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Diagnóstico gratuito</span>
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Plan a medida</span>
+            <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-[#F3F4F6] text-[#374151]">Sin compromisos</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       RESULTADOS
+  ====================================================== -->
+  <section id="resultados" class="py-24 bg-white">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16 fade-up">
+        <h2 class="text-3xl md:text-4xl font-bold text-[#0A111E] tracking-tight">Resultados reales</h2>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        <!-- Case 1 -->
+        <div class="fade-up card-hover p-8 rounded-2xl border border-[#E5E7EB] bg-white">
+          <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB] text-xs font-semibold mb-6">
+            Estudio Contable — 8 empleados
+          </span>
+          <h3 class="text-xl font-bold text-[#0A111E] mb-2">Procesamiento automático de facturas</h3>
+          <p class="text-[#6B7280] text-sm leading-relaxed mb-7">Procesaban 200+ facturas mensuales a mano.</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-xl bg-[#F8F9FB]">
+              <div class="text-xl font-bold text-[#0A111E]" data-target="12" data-suffix="hs">12hs</div>
+              <div class="text-xs text-[#6B7280] mt-0.5">ahorradas/semana</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#F8F9FB]">
+              <div class="text-xl font-bold text-[#0A111E]">&lt; 1 min</div>
+              <div class="text-xs text-[#6B7280] mt-0.5">por factura</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#F8F9FB]">
+              <div class="text-xl font-bold text-[#0A111E]" data-target="95" data-suffix="%">95%</div>
+              <div class="text-xs text-[#6B7280] mt-0.5">precisión</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#EFF6FF]">
+              <div class="text-xl font-bold text-[#2563EB]" data-target="45" data-suffix=" días">45 días</div>
+              <div class="text-xs text-[#2563EB] mt-0.5">ROI</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Case 2 -->
+        <div class="fade-up d1 card-hover p-8 rounded-2xl border border-[#E5E7EB] bg-white">
+          <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB] text-xs font-semibold mb-6">
+            Agencia Inmobiliaria — 15 agentes
+          </span>
+          <h3 class="text-xl font-bold text-[#0A111E] mb-2">Agente IA para calificación de leads</h3>
+          <p class="text-[#6B7280] text-sm leading-relaxed mb-7">Recibían 100+ consultas semanales, la mayoría fuera de horario.</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-xl bg-[#F8F9FB]">
+              <div class="text-xl font-bold text-[#0A111E]" data-target="40" data-prefix="+" data-suffix="%">+40%</div>
+              <div class="text-xs text-[#6B7280] mt-0.5">conversiones</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#F8F9FB]">
+              <div class="text-xl font-bold text-[#0A111E]" data-target="20" data-suffix="hs">20hs</div>
+              <div class="text-xs text-[#6B7280] mt-0.5">ahorradas/semana</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#F8F9FB]">
+              <div class="text-xl font-bold text-[#0A111E]" data-target="100" data-suffix="%">100%</div>
+              <div class="text-xs text-[#6B7280] mt-0.5">leads pre-calificados</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#EFF6FF]">
+              <div class="text-xl font-bold text-[#2563EB]" data-target="30" data-suffix=" seg">30 seg</div>
+              <div class="text-xs text-[#2563EB] mt-0.5">respuesta</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Case 3 -->
+        <div class="fade-up d2 card-hover p-8 rounded-2xl border border-[#E5E7EB] bg-white">
+          <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#EFF6FF] text-[#2563EB] text-xs font-semibold mb-6">
+            Clínica Médica — 3 sucursales
+          </span>
+          <h3 class="text-xl font-bold text-[#0A111E] mb-2">Sistema de gestión de turnos con IA</h3>
+          <p class="text-[#6B7280] text-sm leading-relaxed mb-7">Recepcionistas saturadas con turnos por teléfono y WhatsApp.</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-xl bg-[#F8F9FB]">
+              <div class="text-xl font-bold text-[#0A111E]" data-target="85" data-suffix="%">85%</div>
+              <div class="text-xs text-[#6B7280] mt-0.5">auto-gestión</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#F8F9FB]">
+              <div class="text-xl font-bold text-[#0A111E]" data-target="15" data-suffix="hs">15hs</div>
+              <div class="text-xs text-[#6B7280] mt-0.5">ahorradas/semana</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#F8F9FB]">
+              <div class="text-xl font-bold text-[#0A111E]">Cero</div>
+              <div class="text-xs text-[#6B7280] mt-0.5">doble reserva</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#EFF6FF]">
+              <div class="text-xl font-bold text-[#2563EB]" data-target="30" data-prefix="-" data-suffix="%">-30%</div>
+              <div class="text-xs text-[#2563EB] mt-0.5">ausencias</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       PROCESO
+  ====================================================== -->
+  <section id="como-trabajamos" class="py-24 bg-[#F8F9FB]">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16 fade-up">
+        <h2 class="text-3xl md:text-4xl font-bold text-[#0A111E] tracking-tight">Cómo trabajamos</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+
+        <div class="fade-up">
+          <div class="text-[4rem] font-black leading-none mb-4" style="color: rgba(37,99,235,0.25);">01</div>
+          <h3 class="text-lg font-bold text-[#0A111E] mb-2">Diagnóstico</h3>
+          <p class="text-sm text-[#6B7280] leading-relaxed mb-4">Analizamos tus procesos y detectamos oportunidades de automatización.</p>
+          <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold text-[#2563EB]">1 reunión (45-60 min)</span>
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-500">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+              Gratis
+            </span>
+          </div>
+        </div>
+
+        <div class="fade-up d1">
+          <div class="text-[4rem] font-black leading-none mb-4" style="color: rgba(37,99,235,0.25);">02</div>
+          <h3 class="text-lg font-bold text-[#0A111E] mb-2">Propuesta personalizada</h3>
+          <p class="text-sm text-[#6B7280] leading-relaxed mb-4">Plan detallado con solución, timeline, costos y ROI estimado.</p>
+          <span class="text-xs font-semibold text-[#2563EB]">Entrega: 2-3 días hábiles</span>
+        </div>
+
+        <div class="fade-up d2">
+          <div class="text-[4rem] font-black leading-none mb-4" style="color: rgba(37,99,235,0.25);">03</div>
+          <h3 class="text-lg font-bold text-[#0A111E] mb-2">Implementación</h3>
+          <p class="text-sm text-[#6B7280] leading-relaxed mb-4">Desarrollamos e integramos sin interrumpir tu operación. Tu equipo no para.</p>
+          <span class="text-xs font-semibold text-[#2563EB]">Timeline: 2-4 semanas</span>
+        </div>
+
+        <div class="fade-up d3">
+          <div class="text-[4rem] font-black leading-none mb-4" style="color: rgba(37,99,235,0.25);">04</div>
+          <h3 class="text-lg font-bold text-[#0A111E] mb-2">Optimización continua</h3>
+          <p class="text-sm text-[#6B7280] leading-relaxed mb-4">Monitoreo, ajustes y mejoras basadas en resultados reales. Soporte permanente.</p>
+          <span class="text-xs font-semibold text-[#2563EB]">Desde el día 1</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       CONTACTO
+  ====================================================== -->
+  <section id="contacto" class="py-24 bg-[#0A111E]">
+    <div class="max-w-2xl mx-auto px-6">
+      <div class="text-center mb-12 fade-up">
+        <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight mb-5">
+          Empecemos con un diagnóstico gratuito
+        </h2>
+        <p class="text-[#9CA3AF] text-lg leading-relaxed mb-7">
+          Contanos qué tareas consumen más tiempo en tu equipo. Te respondemos en menos de 24 horas.
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <span class="text-xs font-medium px-3.5 py-1.5 rounded-full border border-white/10 text-white/50">Sin compromiso</span>
+          <span class="text-xs font-medium px-3.5 py-1.5 rounded-full border border-white/10 text-white/50">Consulta gratuita</span>
+          <span class="text-xs font-medium px-3.5 py-1.5 rounded-full border border-white/10 text-white/50">Propuesta en 48hs</span>
+        </div>
+      </div>
+
+      <form id="contact-form" class="fade-up d1 space-y-4" onsubmit="handleSubmit(event)">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-[#6B7280] mb-1.5">Nombre</label>
+            <input type="text" name="name" required placeholder="Tu nombre"
+              class="w-full px-4 py-3 bg-white/[0.05] border border-white/10 rounded-xl text-white placeholder-white/25 text-sm">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-[#6B7280] mb-1.5">Email</label>
+            <input type="email" name="email" required placeholder="tu@empresa.com"
+              class="w-full px-4 py-3 bg-white/[0.05] border border-white/10 rounded-xl text-white placeholder-white/25 text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-[#6B7280] mb-1.5">¿Qué te gustaría automatizar?</label>
+          <textarea name="message" required rows="5"
+            placeholder="Contanos brevemente qué procesos o tareas consumen más tiempo en tu empresa..."
+            class="w-full px-4 py-3 bg-white/[0.05] border border-white/10 rounded-xl text-white placeholder-white/25 text-sm resize-none"></textarea>
+        </div>
+        <button type="submit" id="submit-btn"
+          class="btn-shine w-full py-3.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-xl text-sm transition-colors">
+          Enviar consulta
+        </button>
+        <div id="success-msg" class="hidden text-center py-4 px-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold">
+          ¡Consulta enviada! Te respondemos en menos de 24 horas.
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       FOOTER
+  ====================================================== -->
+  <footer class="bg-[#0A111E] border-t border-[#1a2332] py-12">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
+
+        <!-- Logo neural + tagline -->
+        <div class="flex flex-col items-center md:items-start gap-3">
+          <!-- trent-agency-neural inline (icon + text, text en blanco) -->
+          <svg height="28" viewBox="0 0 300 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:auto">
+            <rect width="40" height="40" fill="#0A111E"/>
+            <path d="M10 12h20M20 12v16" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="square"/>
+            <text x="50" y="28" font-family="Inter, sans-serif" font-size="28" font-weight="500" letter-spacing="0.01em" fill="#FFFFFF">Trent Agency</text>
+          </svg>
+          <p class="text-sm text-[#4B5563] max-w-[240px] text-center md:text-left leading-relaxed">
+            Sistemas inteligentes para empresas que quieren escalar
+          </p>
+        </div>
+
+        <!-- Contact + socials -->
+        <div class="flex flex-col items-center md:items-end gap-4">
+          <a href="mailto:trentagency00@gmail.com"
+             class="text-sm text-[#6B7280] hover:text-white transition-colors">
+            trentagency00@gmail.com
+          </a>
+          <div class="flex items-center gap-5">
+            <a href="https://instagram.com/trentagency" target="_blank" rel="noopener noreferrer"
+               class="flex items-center gap-1.5 text-sm text-[#6B7280] hover:text-white transition-colors">
+              <i data-lucide="instagram" class="w-4 h-4"></i>
+              @trentagency
+            </a>
+            <a href="https://tiktok.com/@trentagency" target="_blank" rel="noopener noreferrer"
+               class="flex items-center gap-1.5 text-sm text-[#6B7280] hover:text-white transition-colors">
+              <!-- TikTok icon -->
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/>
+              </svg>
+              @trentagency
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-10 pt-6 border-t border-[#1a2332] text-center">
+        <p class="text-xs text-[#374151]">© 2025 Trent. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================
+       SCRIPTS
+  ====================================================== -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>
+    // Init Lucide icons
+    lucide.createIcons();
+
+    // ── Navbar scroll behavior ──────────────────────────────
+    const navbar = document.getElementById('navbar');
+    function updateNavbar() {
+      if (window.scrollY > 24) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    }
+    window.addEventListener('scroll', updateNavbar, { passive: true });
+    updateNavbar();
+
+    // ── Scroll progress bar ─────────────────────────────────
+    const scrollProgress = document.getElementById('scroll-progress');
+    function updateProgress() {
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      scrollProgress.style.width = ((window.scrollY / total) * 100) + '%';
+    }
+    window.addEventListener('scroll', updateProgress, { passive: true });
+
+    // ── Mobile menu ─────────────────────────────────────────
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+    });
+
+    // ── Fade-in on scroll (Intersection Observer) ──────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // ── Metric counters ─────────────────────────────────────
+    function animateCounter(el) {
+      const target  = parseFloat(el.dataset.target);
+      const suffix  = el.dataset.suffix  || '';
+      const prefix  = el.dataset.prefix  || '';
+      const duration = 1400;
+      const start    = performance.now();
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = prefix + Math.round(eased * target) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCounter(entry.target);
+          counterObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.6 });
+    document.querySelectorAll('[data-target]').forEach(el => counterObserver.observe(el));
+
+    // ── Contact form ────────────────────────────────────────
+    function handleSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const successMsg = document.getElementById('success-msg');
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+      btn.classList.add('opacity-60', 'cursor-not-allowed');
+      setTimeout(() => {
+        document.querySelectorAll('#contact-form input, #contact-form textarea')
+          .forEach(el => el.value = '');
+        btn.style.display = 'none';
+        successMsg.classList.remove('hidden');
+      }, 900);
+    }
+  </script>
+</body>
+</html>
