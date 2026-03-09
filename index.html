@@ -524,7 +524,10 @@
           Enviar consulta
         </button>
         <div id="success-msg" class="hidden text-center py-4 px-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold">
-          ¡Consulta enviada! Te respondemos en menos de 24 horas.
+          ¡Recibimos tu consulta! Te respondemos en menos de 24hs.
+        </div>
+        <div id="error-msg" class="hidden text-center py-4 px-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-semibold">
+          Hubo un error, intentá de nuevo.
         </div>
       </form>
     </div>
@@ -656,19 +659,48 @@
     document.querySelectorAll('[data-target]').forEach(el => counterObserver.observe(el));
 
     // ── Contact form ────────────────────────────────────────
-    function handleSubmit(e) {
+    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbxHeon7TAHZFepKAyI09gf6s8oRIBqs352BI--6u7eN1rShzCSDQZXIFR2aGHsPNPb7rw/exec';
+
+    async function handleSubmit(e) {
       e.preventDefault();
-      const btn = document.getElementById('submit-btn');
+      const form       = document.getElementById('contact-form');
+      const btn        = document.getElementById('submit-btn');
       const successMsg = document.getElementById('success-msg');
+      const errorMsg   = document.getElementById('error-msg');
+
+      // Deshabilitar botón inmediatamente para evitar duplicados
       btn.disabled = true;
       btn.textContent = 'Enviando...';
       btn.classList.add('opacity-60', 'cursor-not-allowed');
-      setTimeout(() => {
-        document.querySelectorAll('#contact-form input, #contact-form textarea')
-          .forEach(el => el.value = '');
+      errorMsg.classList.add('hidden');
+
+      const payload = {
+        nombre:  form.elements['name'].value.trim(),
+        email:   form.elements['email'].value.trim(),
+        mensaje: form.elements['message'].value.trim(),
+      };
+
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+        // Éxito
+        form.querySelectorAll('input, textarea').forEach(el => el.value = '');
         btn.style.display = 'none';
         successMsg.classList.remove('hidden');
-      }, 900);
+
+      } catch (err) {
+        // Error de red o HTTP
+        errorMsg.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Enviar consulta';
+        btn.classList.remove('opacity-60', 'cursor-not-allowed');
+      }
     }
   </script>
 </body>
