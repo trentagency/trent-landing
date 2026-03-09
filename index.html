@@ -681,15 +681,16 @@
       };
 
       try {
-        const res = await fetch(ENDPOINT, {
+        // mode: 'no-cors' evita el preflight OPTIONS que Google Apps Script no maneja.
+        // La respuesta es opaca (no legible), pero si no lanza excepción el envío fue exitoso.
+        await fetch(ENDPOINT, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify(payload),
         });
 
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-
-        // Éxito
+        // Éxito (fetch no lanzó excepción)
         form.querySelectorAll('input, textarea').forEach(el => el.value = '');
         btn.style.display = 'none';
         successMsg.classList.remove('hidden');
